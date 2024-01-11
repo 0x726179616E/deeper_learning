@@ -1,0 +1,6 @@
+.DS_Store
+bin/
+lib/
+lib64/
+include/
+pyvenv.cfg
