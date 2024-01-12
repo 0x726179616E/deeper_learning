@@ -1,6 +1,6 @@
-.DS_Store
+**/.DS_Store
 bin/
 lib/
-lib64/
+lib64
 include/
 pyvenv.cfg
