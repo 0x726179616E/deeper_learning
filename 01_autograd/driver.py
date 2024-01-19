@@ -39,3 +39,4 @@ def driver():
 if __name__ == "__main__":
     if driver() != 0:
         raise RuntimeError
+    print("COMPLETE: autograd engine")

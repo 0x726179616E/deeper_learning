@@ -5,6 +5,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Neural Network for MNIST 
+# - model hyperparameters:
+#       - learning rate: 0.1 -> 0.001 (consider step/exponential decay for lr)
+#       - batch size: 64 or 128 samples a time 
+#       - training epochs: 10-20
 class NN:
     def __init__(self, layers, learning_rate=0.1, batch_size=64, epochs=15, weight_decay=0.001):
         # load model dimensions 
@@ -41,12 +45,29 @@ class NN:
 
         # forward pass through hidden layers (use ReLU as activation functoin)
         for b, w in zip(self.biases[:-1], self.weights[:-1]):
+            print(f'w.shape = {w.shape}')
+            print(f'a.shape = {activation.shape}')
+            print(f'b.shape = {b.shape}')
+            print('attempting: w @ a + b')
+            activation = activation.reshape(784, 1)
             z = np.dot(w, activation) + b
             zs.append(z)
             activation = self._relu(z)
             activations.append(activation)
 
         # forward pass through output layer (use softmax activation function)
+        print(f'output w.shape = {self.weights[-1].shape}')
+        print(f'output a.shape = {activation.shape}')
+        print(f'output b.shape = {self.biases[-1].shape}')
+
+        print("\nPRINTING WEIGHT DIMENSIONS")
+        i = 0
+        for l in self.weights:
+            print(f'l{i}.shape = {l.shape}')
+            i += 1
+        print()
+
+
         z = np.dot(self.weights[:-1], activation) + self.biases[:-1]
         zs.append(z)
         activation = self._softmax(z)
@@ -106,21 +127,6 @@ class NN:
     def predict(self, x):
         activations, _ = self._forward(x)
         return activations[-1]
-    
-    # TODO: hyperparameters
-    # - learning rate: 0.1 -> 0.001 (consider step/exponential decay for lr)
-    # - batch size: 64 or 128 samples a time 
-    # - training epochs: 10-20
-    # - weight initialization: "Xavier (Glorot)" init vs "He" init
-    # - regularization: L1 and L2 regularization; weight decay and dropout
-
-    # TODO: helper methods; nonlinearities (ReLU, softmax? or sigmoid?)
-    # TODO: forward pass
-    # - input (BS x 784) -> h1 (784 x 256) -> h2 (256x10) -> output (BS x 10)
-    # - hidden layer nonlinearity: ReLU 
-    # - output layer nonlinearity: softmax
-    # TODO: backward pass
-    # - loss function: cross entropy loss
 
 # load mnist dataset from ubyte file into np array
 def fetch_data(file_path):
@@ -132,6 +138,12 @@ def fetch_data(file_path):
         print(f'error reading file: {file_path}')
     return data
 
+# evaluate model's accuracy on test set 
+def evaluate(model, test_data):
+    results = [(np.argmax(model.predict(x)), y) for (x,y) in test_data]
+    accuracy = sum(int(x==y) for (x,y) in results) / len(test_data)
+    return accuracy
+
 # driver function
 def main():
     # load training set and test set
@@ -140,30 +152,27 @@ def main():
     X_test = fetch_data('../data/t10k-images-idx3-ubyte')[0x10:].reshape((-1, 28, 28))
     Y_test = fetch_data('../data/t10k-labels-idx1-ubyte')[8:]
 
-    print(f'X_train.shape: {X_train.shape}')
-    print(f'Y_train.shape: {Y_train.shape}')
-    print(f'X_test.shape: {X_test.shape}')
-    print(f'Y_test.shape: {Y_test.shape}')
+    ## print(f'X_train.shape: {X_train.shape}')
+    ## print(f'Y_train.shape: {Y_train.shape}')
+    ## print(f'X_test.shape: {X_test.shape}')
+    ## print(f'Y_test.shape: {Y_test.shape}')
 
-    print(X_test[5000])
-    print(Y_test[5000])
-    print('OK')
+    ## print(X_test[5000])
+    ## print(Y_test[5000])
 
-# evaluate model accuracy
-# def evaluate(model, X, Y):
-#     results = [(np.argmax(model.predict(x)), y) for x, y in zip(X, Y)]
-#     accuracy = sum(int(x == y) for (x,y) in results) / len(X)
-#     return accuracy
+    training_set = list(zip(X_train, Y_train))
+    test_set = list(zip(X_test, Y_test))
     
-# # plot model accuracy
-# def plot(model: NN, X_train, Y_train, X_test, Y_test, epochs):
-#     accuracies = []
-#     n_epoch = range(1, epochs + 1)
+    # model dimensions: 784 neuron input layer, 128 neuron hidden layer, 10 neuron output layer
+    layer_sizes = [784, 128, 10]
 
-#     for epoch in n_epoch:
-#         model.train(training_data, 1, model.batch_size) # train for 1 epoch at a time
-#         accuracy = evaluate(model, )
-#     pass
+    # # instantiate model
+    model = NN(layers=layer_sizes, learning_rate=0.01, batch_size=64, epochs=15, weight_decay=0.001)
+    model.train(training_data=training_set)
+    accuracy = evaluate(model=model, test_data=test_set)
+    print(f"model accuracy is: {accuracy}")
+    
+    print('COMPLETE: multilayer perceptron program')
 
 # run the program
 if __name__ == '__main__':
