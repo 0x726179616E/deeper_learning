@@ -1,5 +1,3 @@
-#!/usr/bin/env python3 
-
 import numpy as np
 
 # data structure for a Node in the autograd engine's computational graph 
@@ -65,44 +63,3 @@ class SoftMaxNode(Node):
 
 def softmax(x):
     return SoftMaxNode(x)
-
-# test out the "autograd" engine 
-def driver():
-    # round to 2 decimal places when printing numpy array values 
-    np.set_printoptions(precision=2)
-
-    # create nodes
-    x = Node(np.array([2.0, 2.0]))
-    y = Node(np.array([3.0, 3.0]))
-    b = Node(np.array([4.0, 4.0]))
-    c = Node(np.array([8.0, 14.0]))
-
-    # forward pass
-    w = mul(add(x,y), c) 
-    z = softmax(mul(w, b))
-
-    # backward pass
-    z.backward()
-
-    # print values within each node
-    print(f'x = \n{x.value}\n')
-    print(f'y = \n{y.value}\n')
-    print(f'b = \n{b.value}\n')
-    print(f'c = \n{c.value}\n')
-    print(f'w = (x + y) * c =\n{w.value}\n')
-    print(f'z = softmax(w * b) =\n{z.value}\n')
-
-    # print gradients within each node
-    print()
-    print(f'gradient wrt x = \n{x.grad}\n')
-    print(f'gradient wrt y = \n{y.grad}\n')
-    print(f'gradient wrt b = \n{b.grad}\n')
-    print(f'gradient wrt c = \n{c.grad}\n')
-    print(f'gradient wrt w = \n{w.grad}\n')
-    print(f'gradient wrt z = \n{z.grad}\n')
-    return 0
-
-# run program
-if __name__ == "__main__":
-    if driver() != 0:
-        raise RuntimeError
