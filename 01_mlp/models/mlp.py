@@ -1,12 +1,128 @@
 #!/usr/bin/env python3
 
-import numpy as np
-from tqdm import trange
 import os
+import numpy as np
+import matplotlib.pyplot as plt
 
-class MultilayerPerceptron:
-    def __init__():
-        pass
+# Neural Network for MNIST 
+class NN:
+    def __init__(self, layers, learning_rate=0.1, batch_size=64, epochs=15, weight_decay=0.001):
+        # load model dimensions 
+        self.layers = layers 
+
+        # initialize hyperparameters
+        self.learning_rate = learning_rate
+        self.batch_size = batch_size
+        self.epochs = epochs
+        self.weight_decay = weight_decay
+
+        # randomly initialize model's weights and biases
+        self.weights = [np.random.randn(y,x) for x,y in zip(layers[:-1], layers[1:])]
+        self.biases = [np.random.randn(y,1) for y in layers[1:]]
+    
+    # ReLU method
+    def _relu(self, z):
+        return np.maximum(0,z)
+
+    # ReLU derivative method
+    def _drelu(self, z):
+        return (z > 0).astype(float)
+    
+    # softmax method
+    def _softmax(self, z):
+        exps = np.exp(z - np.max(z)) # improve numerical stability
+        return exps / np.sum(exps, axis=0, keepdims=True)
+
+    # forward pass
+    def _forward(self, x):
+        zs = [] # list to store all the score vectors, layer by layer
+        activation = x
+        activations = [x] # list to store all the activations
+
+        # forward pass through hidden layers (use ReLU as activation functoin)
+        for b, w in zip(self.biases[:-1], self.weights[:-1]):
+            z = np.dot(w, activation) + b
+            zs.append(z)
+            activation = self._relu(z)
+            activations.append(activation)
+
+        # forward pass through output layer (use softmax activation function)
+        z = np.dot(self.weights[:-1], activation) + self.biases[:-1]
+        zs.append(z)
+        activation = self._softmax(z)
+        activations.append(activation)
+
+        return activations, zs
+
+    # backward pass
+    def _backward(self, x, y, activations, zs):
+        delta = activations[-1] - y
+
+        # zero the gradients
+        db = [np.zeros(b.shape) for b in self.biases]
+        dw = [np.zeros(w.shape) for w in self.weights]
+
+        # output layer
+        db[-1] = delta
+        dw[-1] = np.dot(delta, activations[-2].T)
+
+        # remaining layers
+        for l in range(2, len(self.layers)):
+            z = zs[-1]
+            sp = self._drelu(z)
+            delta = np.dot(self.weights[- l + 1].T, delta) * sp
+            db[-l] = delta
+            dw[-l] = np.dot(delta, activations[- l + 1].T)
+
+        return db, dw
+
+    def _update_mini_batch(self, mini_batch):
+        db = [np.zeros(b.shape) for b in self.biases]
+        dw = [np.zeros(w.shape) for w in self.weights]
+
+        for x, y in mini_batch:
+            activations, zs = self._forward(x)
+            delta_db, delta_dw = self._backward(x, y, activations, zs)
+            db = [nb + dnb for nb, dnb in zip(db, delta_db)]
+            dw = [nw + dnw for nw, dnw in zip(dw, delta_dw)]
+
+            # apply weight decay
+            self.weights = [(1 - self.weight_decay) * w - (self.learning_rate / len(mini_batch)) * nw for w, nw in zip(self.weights, dw)]
+            self.biases = [b - (self.learning_rate / len(mini_batch)) * nb for b, nb in zip(self.biases, db)]
+
+    # fit on training set
+    ### TODO: EDIT THIS METHOD TO TAKE IN X_TRAIN AND Y_TRAIN AS TWO SEPERATE PARAMETERS AND NOT AS A SINGLE TRAINING SET PARAM
+    def train(self, training_data):
+        n = len(training_data) # number of samples
+
+        for j in range(self.epochs):
+            np.random.shuffle(training_data)
+            mini_batches =  [training_data[k:k + self.batch_size] for k in range(0, n, self.batch_size)]
+
+            for mini_batch in mini_batches:
+                self._update_mini_batch(mini_batch)
+
+    # predict on test set
+    def predict(self, x):
+        activations, _ = self._forward(x)
+        return activations[-1]
+    
+    # TODO: hyperparameters
+    # - learning rate: 0.1 -> 0.001 (consider step/exponential decay for lr)
+    # - batch size: 64 or 128 samples a time 
+    # - training epochs: 10-20
+    # - weight initialization: "Xavier (Glorot)" init vs "He" init
+    # - regularization: L1 and L2 regularization; weight decay and dropout
+
+    # TODO: helper methods; nonlinearities (ReLU, softmax? or sigmoid?)
+    # TODO: forward pass
+    # - input (BS x 784) -> h1 (784 x 256) -> h2 (256x10) -> output (BS x 10)
+    # - hidden layer nonlinearity: ReLU 
+    # - output layer nonlinearity: softmax
+    # TODO: backward pass
+    # - loss function: cross entropy loss
+
+
 
 # load mnist dataset from ubyte file into np array
 def fetch_data(file_path):
@@ -35,6 +151,22 @@ def main():
     print(X_test[5000])
     print(Y_test[5000])
     print('OK')
+
+# evaluate model accuracy
+# def evaluate(model, X, Y):
+#     results = [(np.argmax(model.predict(x)), y) for x, y in zip(X, Y)]
+#     accuracy = sum(int(x == y) for (x,y) in results) / len(X)
+#     return accuracy
+    
+# # plot model accuracy
+# def plot(model: NN, X_train, Y_train, X_test, Y_test, epochs):
+#     accuracies = []
+#     n_epoch = range(1, epochs + 1)
+
+#     for epoch in n_epoch:
+#         model.train(training_data, 1, model.batch_size) # train for 1 epoch at a time
+#         accuracy = evaluate(model, )
+#     pass
 
 # run the program
 if __name__ == '__main__':
