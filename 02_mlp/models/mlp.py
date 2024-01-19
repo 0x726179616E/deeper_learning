@@ -122,8 +122,6 @@ class NN:
     # TODO: backward pass
     # - loss function: cross entropy loss
 
-
-
 # load mnist dataset from ubyte file into np array
 def fetch_data(file_path):
     abs_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), file_path)
@@ -146,7 +144,6 @@ def main():
     print(f'Y_train.shape: {Y_train.shape}')
     print(f'X_test.shape: {X_test.shape}')
     print(f'Y_test.shape: {Y_test.shape}')
-
 
     print(X_test[5000])
     print(Y_test[5000])

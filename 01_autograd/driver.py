@@ -33,9 +33,9 @@ def driver():
     print(f'gradient wrt b = \n{b.grad}\n')
     print(f'gradient wrt w = \n{w.grad}\n')
     print(f'gradient wrt z = \n{z.grad}\n')
-    return -1
+    return 0
 
 # run program
 if __name__ == "__main__":
-    if driver() != -1:
+    if driver() != 0:
         raise RuntimeError
