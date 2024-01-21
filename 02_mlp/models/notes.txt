@@ -1,0 +1,14 @@
+computational graph
+computational graph
+
+forward pass:
+X  --> (@)  --> z1 --> (relu) --> l1 --> (@) --> l2 --> (logsoftmax) --> z2 --> (nll) --> loss
+w1 -->                            w2 -->                                 Y  -->
+
+backward pass:
+1. dloss/dz2 
+2. dloss/dl2 = dloss/dz2 * dz2/dl2  
+3. dloss/dl1 = dloss/dl2 * dl2/dl1
+   dloss/dw2 = dloss/dl2 * dl2/dw2
+4. dloss/dz1 = dloss/dl1 * dl1/dz1
+5. dloss/dw1 = dloss/dz1 * dz1/dw1
