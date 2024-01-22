@@ -40,7 +40,6 @@ def train(model: nn.Module, X_data: torch.Tensor, Y_data: torch.Tensor, batch_si
     optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0) 
     losses, accuracies = [], []
 
-    print("training model...")
     # training loop
     for i in (t := tqdm.trange(iterations)):
         # randomly sample the minibatch
@@ -77,7 +76,6 @@ def main():
         else: 
             device = 'mps'
     else: device = 'cpu'
-    print(f'device: {device}\n')
 
     # load training set and test set into numpy ararys
     X_train = load('../data/train-images-idx3-ubyte')[0x10:].reshape((-1, 28*28))
@@ -93,6 +91,7 @@ def main():
 
     # instantiate model 
     model = NN().to(device)
+    print(f'training model on {device}...')
     train(model, X_train, Y_train, batch_size=128, iterations=1000)
     result = test(model, X_test, Y_test)
     print(f'test accuracy: {result.item() * 100:.2f}%')
