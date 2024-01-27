@@ -10,9 +10,10 @@ import matplotlib.pyplot as plt
 
 torch.set_printoptions(sci_mode=False)
 
-class NN(torch.nn.Module):
+# multilayer perceptron class
+class MLP(torch.nn.Module):
     def __init__(self, hidden_size=128):
-        super(NN, self).__init__()
+        super(MLP, self).__init__()
         self.fc1 = nn.Linear(784, hidden_size, bias=False)
         self.fc2 = nn.Linear(hidden_size, 10, bias=False)
         self.sm = nn.LogSoftmax(dim=1)
@@ -25,16 +26,7 @@ class NN(torch.nn.Module):
         x = self.sm(x) # logsoftmax normalization of outputs
         return x
 
-# load mnist dataset from ubyte file into np array
-def load(file_path):
-    abs_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), file_path)
-    try: 
-        with open(abs_file_path, 'rb') as f:
-            data = np.frombuffer(f.read(), dtype=np.uint8)
-    except IOError: 
-        print(f'error reading file: {file_path}')
-    return data
-
+# training function
 def train(model: nn.Module, X_data: torch.Tensor, Y_data: torch.Tensor, batch_size=128, iterations=1000):
     loss_function = nn.NLLLoss(reduction='none') 
     optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0) 
@@ -62,9 +54,20 @@ def train(model: nn.Module, X_data: torch.Tensor, Y_data: torch.Tensor, batch_si
     plt.plot(losses)
     plt.plot(accuracies)
 
+# testing function
 def test(model: nn.Module, X_data: torch.TensorType, Y_data: torch.Tensor):
     Y_preds = torch.argmax(model(X_data), dim=1).float()
     return (Y_data == Y_preds).float().mean()
+
+# load mnist dataset from ubyte file into np array
+def load(file_path):
+    abs_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), file_path)
+    try: 
+        with open(abs_file_path, 'rb') as f:
+            data = np.frombuffer(f.read(), dtype=np.uint8)
+    except IOError: 
+        print(f'error reading file: {file_path}')
+    return data
 
 # driver function
 def main():
@@ -90,7 +93,7 @@ def main():
     Y_test  = torch.from_numpy(Y_test.copy()).to(device).long()
 
     # instantiate model 
-    model = NN().to(device)
+    model = MLP().to(device)
     print(f'training model on {device}...')
     train(model, X_train, Y_train, batch_size=128, iterations=1000)
     result = test(model, X_test, Y_test)
