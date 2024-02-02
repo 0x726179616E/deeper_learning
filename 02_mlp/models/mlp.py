@@ -10,6 +10,11 @@ import matplotlib.pyplot as plt
 
 torch.set_printoptions(sci_mode=False)
 
+# detect torch device
+if torch.cuda.is_available(): device = 'cuda' 
+elif torch.backends.mps.is_available(): device = 'mps'
+else: device = 'cpu'
+
 # multilayer perceptron class
 class MLP(torch.nn.Module):
     def __init__(self, hidden_size=128):
@@ -69,18 +74,9 @@ def load(file_path):
         print(f'error reading file: {file_path}')
     return data
 
+
 # driver function
 def main():
-    # load computations onto GPU if possible
-    if torch.cuda.is_available(): device = 'cuda'
-    elif torch.backends.mps.is_available(): 
-        if not torch.backends.mps.is_built():
-            print("MPS not available because the current PyTorch install was not built with MPS enabled.")
-        else: 
-            device = 'mps'
-    else: device = 'cpu'
-
-    # load training set and test set into numpy ararys
     X_train = load('../data/train-images-idx3-ubyte')[0x10:].reshape((-1, 28*28))
     Y_train = load('../data/train-labels-idx1-ubyte')[8:]
     X_test = load('../data/t10k-images-idx3-ubyte')[0x10:].reshape((-1, 28*28))
@@ -95,10 +91,10 @@ def main():
     # instantiate model 
     model = MLP().to(device)
     print(f'training model on {device}...')
-    train(model, X_train, Y_train, batch_size=128, iterations=1000)
+    train(model, X_train, Y_train, batch_size=128, iterations=3000)
     result = test(model, X_test, Y_test)
-    print(f'test accuracy: {result.item() * 100:.2f}%')
-    
+    print(f'test accuracy: {result.item() * 100:.2f}%') # should achieve ~95% test accuracy
+
     print('COMPLETE: multilayer perceptron')
 
 # run the entire program
