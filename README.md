@@ -1,6 +1,6 @@
 # deeper_learning
 
-This repo contains my implementations of some machine learning / deep learning algorithms for autodidactic purposes.
+This repo contains some machine learning / deep learning programs I've implemented for autodidactic purposes.
 
 #### Sections (*TBD):
 
