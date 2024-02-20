@@ -31,7 +31,7 @@ class MLP(torch.nn.Module):
         x = self.sm(x) # logsoftmax normalization of outputs
         return x
 
-# training function
+# train the model
 def train(model: nn.Module, X_data: torch.Tensor, Y_data: torch.Tensor, batch_size=128, iterations=1000):
     loss_function = nn.NLLLoss(reduction='none') 
     optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0) 
@@ -59,7 +59,7 @@ def train(model: nn.Module, X_data: torch.Tensor, Y_data: torch.Tensor, batch_si
     plt.plot(losses)
     plt.plot(accuracies)
 
-# testing function
+# evaluate the model 
 def test(model: nn.Module, X_data: torch.TensorType, Y_data: torch.Tensor):
     Y_preds = torch.argmax(model(X_data), dim=1).float()
     return (Y_data == Y_preds).float().mean()
