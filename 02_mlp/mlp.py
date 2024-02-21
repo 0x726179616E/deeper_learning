@@ -93,7 +93,7 @@ def main():
     print(f'training model on {device}...')
     train(model, X_train, Y_train, batch_size=128, iterations=3000)
     result = test(model, X_test, Y_test)
-    print(f'test accuracy: {result.item() * 100:.2f}%') # should achieve ~95% test accuracy
+    print(f'test accuracy: {result.item() * 100:.2f}%') # test accuracy should be ~95% 
 
     print('COMPLETE: multilayer perceptron')
 
