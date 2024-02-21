@@ -16,7 +16,7 @@ if torch.cuda.is_available(): device = 'cuda'
 elif torch.backends.mps.is_available(): device = 'mps'
 else: device = 'cpu'
 
-# define convnet 
+# architecture inspired by: https://towardsdatascience.com/going-beyond-99-mnist-handwritten-digits-recognition-cfff96337392
 class CNN(torch.nn.Module):
     def __init__(self):
         super(CNN, self).__init__()
@@ -48,16 +48,15 @@ class CNN(torch.nn.Module):
         return x
 
 # train the model
-def train(model: torch, X_data: torch.Tensor, Y_data: torch.Tensor, epochs=30):
+def train(model: torch, X_data: torch.Tensor, Y_data: torch.Tensor, epochs=10):
     loss_function = nn.CrossEntropyLoss() 
     optimizer = torch.optim.Adam(model.parameters(), lr=0.0005, weight_decay=0.005)
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor=0.2, patience=2)
     BS = 64 # batch size
 
     # training loop
     for epoch in range(epochs):
         print(f"epoch: {epoch + 1}")
-        for _ in (t := tqdm.trange(937)): # 60000 // BS
+        for _ in (t := tqdm.trange(938)): # 60000 // BS = 937.5
             # randomly sample the minibatch
             sample = np.random.randint(low=0, high=X_data.size(0), size=(BS))
             X = X_data[sample]
@@ -90,22 +89,22 @@ def load(file_path):
 # driver function
 def main():
     # load training set and test set into numpy ararys
-    X_train = load('../data/mnist/train-images-idx3-ubyte')[0x10:].reshape((-1,1,28,28))
-    Y_train = load('../data/mnist/train-labels-idx1-ubyte')[8:]
-    X_test = load('../data/mnist/t10k-images-idx3-ubyte')[0x10:].reshape((-1,1,28,28))
-    Y_test = load('../data/mnist/t10k-labels-idx1-ubyte')[8:]
+    X_train_np = load('../data/mnist/train-images-idx3-ubyte')[0x10:].reshape((-1,1,28,28))
+    Y_train_np = load('../data/mnist/train-labels-idx1-ubyte')[8:]
+    X_test_np = load('../data/mnist/t10k-images-idx3-ubyte')[0x10:].reshape((-1,1,28,28))
+    Y_test_np = load('../data/mnist/t10k-labels-idx1-ubyte')[8:]
 
     # convert training and test sets into torch tensors 
-    X_train_tensor = torch.from_numpy(X_train.copy()).to(device).float()
-    Y_train_tensor = F.one_hot(torch.from_numpy(Y_train.copy()).to(device).long()).float()
-    X_test_tensor = torch.from_numpy(X_test.copy()).to(device).float()
-    Y_test_tensor = torch.from_numpy(Y_test.copy()).to(device)
+    X_train = torch.from_numpy(X_train_np.copy()).to(device).float()
+    Y_train = F.one_hot(torch.from_numpy(Y_train_np.copy()).to(device).long()).float()
+    X_test = torch.from_numpy(X_test_np.copy()).to(device).float()
+    Y_test = torch.from_numpy(Y_test_np.copy()).to(device)
 
     # instantiate the model
     model = CNN().to(device)
     print(f'\ntraining model on {device}...\n')
-    train(model, X_train_tensor, Y_train_tensor)
-    result = test(model, X_test_tensor, Y_test_tensor)
+    train(model, X_train, Y_train)
+    result = test(model, X_test, Y_test)
     print(f"\ntest accuracy: {result.item() * 100:.2f}%\n") # test accuracy should be ~98-99%
 
     print('COMPLETE: convolutional neural network')

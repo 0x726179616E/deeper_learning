@@ -1,8 +1,8 @@
 # deeper_learning
 
-This repo contains some machine learning / deep learning programs I've implemented for autodidactic purposes.
+Some machine learning programs I've implemented for autodidactic purposes.
 
-#### Sections (*TBD):
+#### Sections (*WIP):
 
 0. linear models (regression, classification)
 1. autograd engine (very rudimentary via numpy)
