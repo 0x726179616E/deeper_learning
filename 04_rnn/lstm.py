@@ -12,23 +12,7 @@ if torch.cuda.is_available(): device = 'cuda'
 elif torch.backends.mps.is_available(): device = 'mps'
 else: device = 'cpu'
 
-class RNN(nn.Module):
-    def __init__(self, input_size, hidden_size, output_size):
-        super(RNN, self).__init__()
-        self.hidden_size = hidden_size
-        self.i2h = nn.Linear(in_features=(input_size + hidden_size), out_features=hidden_size)
-        self.i2o = nn.Linear(in_features=(input_size + hidden_size), out_features=output_size)
-        self.softmax = nn.LogSoftmax(dim=1)
-
-    def forward(self, x, h):
-        combined = torch.cat((x, h), 1)
-        h = self.i2h(combined)
-        out = nn.LogSoftmax(self.i2o(combined), dim=1)
-        return out, h
-
-    def init_hidden(self):
-        return torch.zeros(1, self.hidden_size)
-
+# TODO: implement long-short term memory (LSTM) recurrent neural network model
 
 # all data preparation is from: https://github.com/karpathy/makemore
 class CharDataset(torch.utils.data.Dataset):
@@ -81,12 +65,6 @@ if __name__ == "__main__":
     words = [w.strip() for w in data.splitlines() if w]
     chars = sorted(list(set(''.join(words))))
     max_word_length = max(len(w) for w in words)
-
-    # DIAGNOSTIC PRINTS
-    # print(f"number of examples in dataset: {len(words)}\n")
-    # print(f"max word length: {max_word_length}\n")
-    # print(f"number of unique characters in vocabulary: {len(chars)}\n")
-    # print(f"vocabulary:\n{''.join(chars)}")
 
     # split data into training and test sets
     test_set_sz = min(1000, int(len(words) * 0.1)) # 10% of training set
