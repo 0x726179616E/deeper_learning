@@ -1,70 +1,90 @@
 #!/usr/bin/env python3
 
 import math
-import numpy as np
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
 
-BS = 32 # batch size
-seqlen = 1024 # max length of a sequence
-dmodel = 512 # dimensionality of input embeddings
-heads = 8 # number of heads 
-dk = int(dmodel / heads)
-dv = dk
+torch.set_printoptions(sci_mode=False)
 
-# compute softmax along last dimension of a tensor
-def softmax(z):
-    exp_z = np.exp(z - np.max(z, axis=-1, keepdims=True))
-    return exp_z / np.sum(exp_z, axis=-1, keepdims=True)
+# detect torch device
+if torch.cuda.is_available(): device = 'cuda'
+elif torch.backends.mps.is_available(): device = 'mps'
+else: device = 'cpu'
 
 # scaled dot-product attention
-def attention(Q: np.ndarray, K: np.ndarray, V: np.ndarray):
-    d = K.shape[-1]
-    scaled_QK = np.dot(Q, K.T) / math.sqrt(d)
-    return np.dot(softmax(scaled_QK), V)
+def attention(Q: torch.Tensor, K: torch.Tensor, V: torch.Tensor, mask=None):
+    dk = torch.tensor(K.shape[-1])
+    logits = Q @ K.transpose(-2,-1) / torch.sqrt(dk)
 
-# multihead attention 
-def multihead_attention(Q: np.ndarray, K: np.ndarray, V: np.ndarray, h):
-    d = Q.shape[-1]
-    Wo = np.random.rand(h*d, dmodel)
-    heads_list = []
-    for i in range(h):
-        Wqi = np.random.rand(dmodel, d)
-        Wki = np.random.rand(dmodel, d)
-        Wvi = np.random.rand(dmodel, d)
-        head  = attention()
-    np.concatenate()
+    # handle masking (for decoder)
+    if mask is not None:
+        logits = logits.masked_fill(mask == 0, -9e15)
+
+    attention_weights = F.softmax(logits, dim=-1)
+    output = attention_weights @ V
+    return output, attention_weights
+
+# multihead attention mechanism
+def multihead_attention(Q: torch.Tensor, K: torch.Tensor, V: torch.Tensor, num_heads: int, dmodel: int, mask=None):
+    depth = dmodel // num_heads
+
+    # linearly project queries, keys, and values
+    Q_proj = torch.randn(*Q.shape, depth)
+    K_proj = torch.randn(*K.shape, depth)
+    V_proj = torch.randn(*V.shape, depth)
+    print(f'Q_proj: {Q_proj.shape}')
+
+    # split projections to fit into each head
+    Q_split = torch.split(Q_proj, num_heads, dim=-1)
+    K_split = torch.split(K_proj, num_heads, dim=-1)
+    V_split = torch.split(V_proj, num_heads, dim=-1)
+
+    outs = [] # list of outputs from each head
+    for i in range(num_heads):
+        output, _ = attention(Q_split[i], K_split[i], V_split[i], mask)
+        outs.append(output)
     
+    # concatenate outputs into single tensor
+    cat_attn = torch.cat(outs, dim=-1)
+    Wo = torch.randn(*cat_attn.shape) 
 
+    # compute final linear projection 
+    Y = cat_attn @ Wo.transpose(-2,-1)
+    return Y
 
+def main():
+    print(f'using device: {device}')
+    print()
 
-# tensor of input embeddings
-X = np.random.rand(BS, seqlen, dmodel)
+    heads = 8
+    dmodel = 512
+    seq_len = 100
 
-print(f'X: {X.shape}')
-print()
+    # diagnostic prints
+    print(f'heads: {heads}')
+    print(f'dmodel: {dmodel}')
+    print(f'heads: {seq_len}')
+    print()
 
-# projection matrices from X to Q,K,V
-Wq = np.random.rand(dmodel, dk)
-Wk = np.random.rand(dmodel, dk)
-Wv = np.random.rand(dmodel, dv)
+    # randonly init queries, keys, and values from normal distribution
+    Q = torch.randn(seq_len, dmodel)
+    K = torch.randn(seq_len, dmodel)
+    V = torch.randn(seq_len, dmodel)
 
-print(f'Wq: {Wq.shape}')
-print(f'Wk: {Wk.shape}')
-print(f'Wv: {Wv.shape}')
-print()
+    # diagnostic prints 
+    print(f'Q: {Q.shape}')
+    print(f'K: {K.shape}')
+    print(f'V: {V.shape}')
+    print()
 
-# compute Q,K,V
-Q = np.dot(X, Wq)
-K = np.dot(X, Wk)
-V = np.dot(X, Wv)
+    # compute multihead attention mechanism
+    Y = multihead_attention(Q, K, V, heads, dmodel)
 
-print(f'Q: {Q.shape}')
-print(f'K: {K.shape}')
-print(f'V: {V.shape}')
-print()
+    # diagnostic print
+    print(f'Y: {Y.shape}')
 
-print(f'Q: {Q.shape}')
-print(f'K: {K.shape}')
-print(f'V: {V.shape}')
-print()
+    print("\nCOMPLETE: multihead attention mechanism\n")
 
-multihead_attention(Q,K,V, heads)
+if __name__ == "__main__":
+    main()
