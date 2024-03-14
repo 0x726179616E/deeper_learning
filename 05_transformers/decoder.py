@@ -48,6 +48,7 @@ class DecoderBlock(nn.Module):
 
 # TODO: implement function that can generate masking to preserve transformer's auto-regressive properties
 
+
 # driver function
 def main():
     bs = 32 # batch size
@@ -66,12 +67,11 @@ def main():
     decoder = DecoderBlock(d_model, heads)
 
     # sample input
-    x = torch.rand(bs, seq_len, d_model) # [ batch_size, seq_len, embed_dim)
+    x = torch.rand(bs, seq_len, d_model) # [ batch_size, seq_len, embed_dim ]
     print(f'input: {x.shape}')
     print()
 
-    # TODO: mask = generate_mask(seq_len) # (seq_len, seq_len)
-
+    # TODO: mask = generate_mask(seq_len) # [ batch_size x heads, seq_len, seq_len ]
 
     # compute output of decoder-only attention block
     out = decoder(x)
