@@ -8,6 +8,7 @@ if torch.cuda.is_available(): device = 'cuda'
 elif torch.backends.mps.is_available(): device = 'mps'
 else: device = 'cpu'
 
+
 # decoder block within transformer as seen in Vaswani et al. (2017)
 class DecoderBlock(nn.Module):
     def __init__(self, embed_dim, n_heads, d_ff=2048, dropout=0.1):
@@ -46,7 +47,12 @@ class DecoderBlock(nn.Module):
 
         return x
 
-# TODO: implement function that can generate masking to preserve transformer's auto-regressive properties
+
+# generate masking to preserve transformer's auto-regressive properties
+def generate_mask(batch_size, n_heads, seq_len):
+    mask = torch.triu(torch.ones(seq_len, seq_len) * float('-inf'), diagonal=1)
+    mask = mask.repeat(batch_size * n_heads, 1, 1) # manually expand the mask
+    return mask
 
 
 # driver function
@@ -64,21 +70,22 @@ def main():
     print()
 
     # instantiate decoder block
-    decoder = DecoderBlock(d_model, heads)
+    decoder = DecoderBlock(d_model, heads).to(device)
 
     # sample input
-    x = torch.rand(bs, seq_len, d_model) # [ batch_size, seq_len, embed_dim ]
+    x = torch.rand(bs, seq_len, d_model).to(device) # [ batch_size, seq_len, embed_dim ]
     print(f'input: {x.shape}')
     print()
 
-    # TODO: mask = generate_mask(seq_len) # [ batch_size x heads, seq_len, seq_len ]
+    # generate mask
+    mask = generate_mask(bs, heads, seq_len).to(device)
 
     # compute output of decoder-only attention block
-    out = decoder(x)
+    out = decoder(x, attn_mask=mask)
     print(f'out: {out.shape}')
     print()
 
-    print("COMPLETE: decoder-only transformer block")
+    print("COMPLETE: decoder block")
 
 if __name__ == '__main__':
     main()
